@@ -1,0 +1,85 @@
+<html>
+    <head>
+        <meta charset="utf-8"/>
+        <script src="http://code.jquery.com/jquery-1.11.0.min.js"></script>
+        <script>
+            var cityid;
+            function mysearch(city) {
+                
+                $.ajax({
+                    url: 'https://developers.zomato.com/api/v2.1/cities?q='+city,
+                    type: 'GET',
+                    dataType: 'json',
+                    contentType: "application/json",
+                    beforeSend: function(xhr) {
+                        xhr.setRequestHeader("user-key", '4290f2f5239ebc9da82b6dd5d56d1795');
+                    },
+                    success: function(data){
+                       
+                      cityid=data.location_suggestions[0].id;
+                       alert(cityid);
+                        //alert(data.responseText);
+                    },
+                    async:false
+                });
+               // alert(city_id);
+               
+               let dropdown = $('#cuisine-dropdown');
+
+                dropdown.empty();
+
+                dropdown.append('<option selected="true" disabled>Choose a Cuisine</option>');
+                dropdown.prop('selectedIndex', 0);
+                $.ajax({
+                    url: 'https://developers.zomato.com/api/v2.1/cuisines?city_id='+cityid,
+                    type: 'GET',
+                    dataType: 'json',
+                    contentType: "application/json",
+                    beforeSend: function(xhr) {
+                        xhr.setRequestHeader("user-key", '4290f2f5239ebc9da82b6dd5d56d1795');
+                    },
+                    success: function(data){
+                        $.each(data.cuisines, function (key, entry) {
+                            dropdown.append($('<option></option>').attr('value', entry.cuisine.cuisine_id).text(entry.cuisine.cuisine_name));
+                        })
+                    }
+                });
+                
+            }
+             function getResults() {
+                cuisineid = $( "#cuisine-dropdown" ).val();
+                $.ajax({
+                    url: 'https://developers.zomato.com/api/v2.1/search?entity_id=' + cityid +'&entity_type=city&count=10&cuisines='+ cuisineid +'&sort=rating&order=desc',
+                    type: 'GET',
+                    dataType: 'json',
+                    contentType: "application/json",
+                    beforeSend: function(xhr) {
+                        xhr.setRequestHeader("user-key", '4290f2f5239ebc9da82b6dd5d56d1795');
+                    },
+                    success: function(data){
+                        //console.log(JSON.stringify(data));
+                        //cityid = data.location_suggestions[0].id;
+                        document.write("<table border=1 text-align=center bgcolor=blue><tr><th>Name</th><th>Average Cost</th><th>Rating</th><th>Address</th></tr>");
+                        $.each(data.restaurants, function (key, entry) {
+                            document.write("<tr><td>" + entry.restaurant.name +"</td><td>"+ entry.restaurant.average_cost_for_two +"</td><td>" + entry.restaurant.user_rating.aggregate_rating +"</td><td>"+entry.restaurant.location.address+"</td></tr>");
+                        })
+                        document.write('</table>');
+                    }
+                });
+            }
+            
+        </script> 
+        
+    </head>
+    <body>
+        <form name="search">
+        City <input type="text" id="city">
+        <input type="button" value="search" onclick="mysearch(city.value);" value="Get Cuisine"/>
+        Cuisine: <select id="cuisine-dropdown" name="cuisine">
+                    </select>
+        <input type="button" id="resultsBtn" onclick="getResults()" value="Get Results">
+        <br><br>
+        
+        </form>
+    </body>
+</html>
